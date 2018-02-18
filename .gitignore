@@ -1,0 +1,9 @@
+# Composer Files
+vendor/
+composer.lock
+
+# IDE files
+.idea/
+
+#config files
+app/config.php

@@ -1,0 +1,22 @@
+{
+    "name": "rangaraaj/histogram",
+    "description": "Histogram app for social media",
+    "keywords": ["twitter", "histogram", "micro-framework"],
+    "authors": [
+        {
+            "name": "Raaj Vinay",
+            "email": "rangaraaj.v@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6",
+        "silex/silex": "~2.0",
+        "guzzlehttp/guzzle": "6.0",
+        "guzzlehttp/oauth-subscriber": "0.3.*",
+        "abraham/twitteroauth": "0.7.4",
+        "phpunit/phpunit": "5.3"
+    },
+    "autoload": {
+        "psr-4": { "app\\": "src/app" }
+    }
+}
