@@ -50,8 +50,8 @@ class ConnectorServiceProvider implements ServiceProviderInterface
      *
      * Creates the connector class based on the name
      *
-     * @param $name string Name of the Connector
-     * @param $params array Connector Parameters
+     * @param string $name Name of the Connector
+     * @param array $params Connector Parameters
      * @return ConnectorInterface
      * @throws \Exception
      */

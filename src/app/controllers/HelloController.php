@@ -18,7 +18,7 @@ class HelloController
      * Functions that returns wth the Hello Test
      *
      * @param Application $app
-     * @param $username
+     * @param string $username
      * @return Response
      */
     public function hello(Application $app, $username)

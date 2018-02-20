@@ -39,4 +39,16 @@ Copy config.sample.php to config.php
 
 `cp config.sample.php config.php`
 
-## Background
+## Run the application
+Navigate to the web folder and access the following URL
+
+### /hello/world
+Returns a text, "Hello world"
+
+### /histogram/variety
+Returns a JSON string with the tweets per hour during the day
+{"00":3,"01":2,"02":4,"03":3,"04":1,"05":2,"06":14,"07":2,"08":3,"09":2,"10":4,"12":1,"13":1,"14":2,"15":3,"16":4,"17":6,"18":7,"19":4,"20":4,"21":6,"22":2,"23":5}
+
+## Tests
+To run the unit tests, PHP >5.6 is required. Simple go the project path
+and run `vendor/bin/phpunit`

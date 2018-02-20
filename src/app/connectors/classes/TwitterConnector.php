@@ -96,7 +96,7 @@ class TwitterConnector implements ConnectorInterface
      */
     public function init($params = array())
     {
-        if (!isset($params['key']) || !isset($params['secret'])) {
+        if(!isset($params['key']) || !isset($params['secret'])) {
             throw new MissingConfigException("Please set the twitter key and secret in the config.");
         }
 
@@ -124,19 +124,20 @@ class TwitterConnector implements ConnectorInterface
      * @param array $tweets
      * @return array
      */
-    public function groupTweetsByHour($tweets = array())
+    private function groupTweetsByHour($tweets = array())
     {
         $output = array();
         foreach ($tweets as $tweet) {
             $created_hour = date('H', strtotime($tweet->created_at));
 
-            if (!isset($output[$created_hour] )) {
+            if(!isset($output[$created_hour])) {
                 $output[$created_hour] = 0;
             }
             $output[$created_hour] += 1;
         }
 
         ksort($output);
+
         return $output;
     }
 
@@ -149,9 +150,10 @@ class TwitterConnector implements ConnectorInterface
      */
     private function getTweetsForLastDay($username)
     {
-        $tweets = $this->getTweets($username);
+        $cut_off_date = date_create(date('Y-m-d H:i:s', strtotime('-1 days')));
+        $tweets       = $this->getTweets($username, $cut_off_date);
 
-        if (!$tweets) {
+        if(!count($tweets)) {
             throw new InvalidResponseException("No tweets found for the $username");
         }
 
@@ -162,37 +164,46 @@ class TwitterConnector implements ConnectorInterface
      * Recursive Get Tweets for the last 24 hours using max id
      *
      * @read More at https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines
-     * @param $username
-     * @param null $max_id
+     *
+     * @param string $username Username
+     * @param \DateTime $cut_off_date Cut Off Date
+     * @param string $max_id Max ID
+     * @param int $count
      * @return array
+     * @throws InvalidResponseException
      */
-    private function getTweets($username, $max_id = null)
+    private function getTweets($username, $cut_off_date, $max_id = null, $count = 10)
     {
-        $yesterday = date_create(date('Y-m-d H:i:s', strtotime( '-1 days')));
         $request = array(
             'screen_name' => $username,
-            'count'       => 10,
+            'count'       => $count,
         );
-        if ($max_id !== null) {
+        if($max_id !== null) {
             $request['max_id'] = $max_id;
         }
 
+        // Get the response from the client
         $contents = $this->getClient()->get(self::USER_TIMELINE_ENDPOINT, $request);
+
+        if(isset($contents->errors)) {
+            throw new InvalidResponseException("Twitter user timeline failed");
+        }
 
         $tweets = array();
         foreach ($contents as $i => $content) {
             $latest_tweet = date_create(date('Y-m-d H:i:s', strtotime($content->created_at)));
 
-            if ($latest_tweet <= $yesterday) {
+            // That's all folks - The End
+            if($latest_tweet <= $cut_off_date) {
                 break;
             }
 
-            $max_id = $content->id;
+            $max_id   = $content->id;
             $tweets[] = $content;
 
             // Has more?
-            if ($i == 9) {
-                $tweets = array_merge($this->getTweets($username, $max_id), $tweets);
+            if($i == ($count - 1) && $latest_tweet > $cut_off_date) {
+                $tweets = array_merge($tweets, $this->getTweets($username, $cut_off_date, $max_id));
             }
         }
 

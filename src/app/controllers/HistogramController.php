@@ -22,15 +22,15 @@ class HistogramController
      *
      * @param Request $request
      * @param Application $app
-     * @param $username
+     * @param string $username
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function execute(Request $request, Application $app, $username)
     {
-        $username = $request->get('username');
-
+        // Connector is already initialized while register, just get the Data
         $response = $app['connector']()->getData($username);
 
+        // Return the data in json
         return $app->json($response);
     }
 }

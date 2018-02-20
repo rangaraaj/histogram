@@ -24,7 +24,8 @@ class HistogramControllerProvider implements ControllerProviderInterface
     public function connect(Application $app)
     {
         $controllers = $app['controllers_factory'];
-        $controllers->get('/{username}', 'app\controllers\HistogramController::execute');
+        $controllers->get('/{username}', 'app\controllers\HistogramController::execute')
+                    ->assert('username', '[a-zA-Z0-9_]{1,15}');
         return $controllers;
     }
 }
