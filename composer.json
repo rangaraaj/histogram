@@ -18,5 +18,9 @@
     },
     "autoload": {
         "psr-4": { "app\\": "src/app" }
+    },
+    "require-dev": {
+        "symfony/browser-kit": "^3.4",
+        "symfony/css-selector": "^3.4"
     }
 }

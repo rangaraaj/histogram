@@ -24,7 +24,8 @@ class HelloControllerProvider implements ControllerProviderInterface
     public function connect(Application $app)
     {
         $controllers = $app['controllers_factory'];
-        $controllers->get('/{username}', 'app\controllers\HelloController::hello');
+        $controllers->get('/{username}', 'app\controllers\HelloController::hello')
+                    ->assert('username', '[a-zA-Z0-9_]{1,15}');;
         return $controllers;
     }
 }

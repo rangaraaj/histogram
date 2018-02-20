@@ -17,8 +17,74 @@ use app\connectors\error\MissingConfigException;
 class TwitterConnector implements ConnectorInterface
 {
     const USER_TIMELINE_ENDPOINT = 'statuses/user_timeline';
+
     /** @var  TwitterOAuth */
     private $client;
+
+    /** @var string */
+    private $key;
+
+    /** @var $secret */
+    private $secret;
+
+    /**
+     * @return string
+     */
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    /**
+     * @param string $key
+     */
+    public function setKey($key)
+    {
+        $this->key = $key;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSecret()
+    {
+        return $this->secret;
+    }
+
+    /**
+     * @param mixed $secret
+     */
+    public function setSecret($secret)
+    {
+        $this->secret = $secret;
+    }
+
+    /**
+     * Get Client
+     *
+     * Uses TwitterOAuth library, if empty
+     * @read more at https://github.com/abraham/twitteroauth
+     *
+     * @return TwitterOAuth
+     */
+    public function getClient()
+    {
+        if(empty($this->client)) {
+            return new TwitterOAuth($this->getKey(), $this->getSecret());
+        }
+
+        return $this->client;
+    }
+
+    /**
+     * Set Client
+     *
+     * @param $client
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Init
@@ -34,23 +100,8 @@ class TwitterConnector implements ConnectorInterface
             throw new MissingConfigException("Please set the twitter key and secret in the config.");
         }
 
-        $this->client = $this->getClient($params['key'], $params['secret']);
-    }
-
-    /**
-     * Get Client
-     *
-     * Uses TwitterOAuth library.
-     * @read more at https://github.com/abraham/twitteroauth
-     * @param $key string Twitter Consumer Key
-     * @param $secret string Twitter Consumer Secret
-     * @param null $token string Token
-     * @param null $token_secret string Token Secret
-     * @return TwitterOAuth
-     */
-    private function getClient($key, $secret, $token = null, $token_secret = null)
-    {
-        return new TwitterOAuth($key, $secret, $token, $token_secret);
+        $this->setKey($params['key']);
+        $this->setSecret($params['secret']);
     }
 
     /**
@@ -64,12 +115,17 @@ class TwitterConnector implements ConnectorInterface
      */
     public function getData($username)
     {
-        $tweets = $this->getTweetsForLastDay($username);
+        return $this->groupTweetsByHour($this->getTweetsForLastDay($username));
+    }
 
-        if (!count($tweets)) {
-            throw new InvalidResponseException("No tweets found for the $username");
-        }
-
+    /**
+     * Group Tweets By Hour
+     *
+     * @param array $tweets
+     * @return array
+     */
+    public function groupTweetsByHour($tweets = array())
+    {
         $output = array();
         foreach ($tweets as $tweet) {
             $created_hour = date('H', strtotime($tweet->created_at));
@@ -87,18 +143,59 @@ class TwitterConnector implements ConnectorInterface
     /**
      * Gets the all the tweets for the last 24 hours.
      *
-     * @todo implement this
-     * @read More at https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines
-     * @param $username string
-     * @return array|object
+     * @param $username
+     * @return array
+     * @throws InvalidResponseException
      */
     private function getTweetsForLastDay($username)
     {
-        $contents = $this->client->get(self::USER_TIMELINE_ENDPOINT, array(
+        $tweets = $this->getTweets($username);
+
+        if (!$tweets) {
+            throw new InvalidResponseException("No tweets found for the $username");
+        }
+
+        return $tweets;
+    }
+
+    /**
+     * Recursive Get Tweets for the last 24 hours using max id
+     *
+     * @read More at https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines
+     * @param $username
+     * @param null $max_id
+     * @return array
+     */
+    private function getTweets($username, $max_id = null)
+    {
+        $yesterday = date_create(date('Y-m-d H:i:s', strtotime( '-1 days')));
+        $request = array(
             'screen_name' => $username,
             'count'       => 10,
-        ));
+        );
+        if ($max_id !== null) {
+            $request['max_id'] = $max_id;
+        }
 
-        return $contents;
+        $contents = $this->getClient()->get(self::USER_TIMELINE_ENDPOINT, $request);
+
+        $tweets = array();
+        foreach ($contents as $i => $content) {
+            $latest_tweet = date_create(date('Y-m-d H:i:s', strtotime($content->created_at)));
+
+            if ($latest_tweet <= $yesterday) {
+                break;
+            }
+
+            $max_id = $content->id;
+            $tweets[] = $content;
+
+            // Has more?
+            if ($i == 9) {
+                $tweets = array_merge($this->getTweets($username, $max_id), $tweets);
+            }
+        }
+
+        return $tweets;
     }
 }

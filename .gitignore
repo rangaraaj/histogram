@@ -7,3 +7,6 @@ composer.lock
 
 #config files
 app/config.php
+
+$coverage
+coverage/
