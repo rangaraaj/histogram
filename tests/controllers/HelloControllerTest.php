@@ -15,7 +15,7 @@ class HelloControllerTest extends WebTestCase
      */
     public function createApplication()
     {
-        return require __DIR__ . '/../../../app/app.php';
+        return require __DIR__ . '/../../app/app.php';
     }
 
     public function testDefaultPage()

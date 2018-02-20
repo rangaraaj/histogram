@@ -1,6 +1,6 @@
 <?php
 
-namespace tests\conntectors\classes;
+namespace tests\conntectors;
 
 use app\connectors\ConnectorServiceProvider;
 
